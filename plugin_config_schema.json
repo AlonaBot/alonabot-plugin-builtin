@@ -1,7 +1,12 @@
 {
-  "recipient": {
+  "dark": {
+    "type": "bool",
+    "description": "Use the dark help menu theme",
+    "default": false
+  },
+  "store_source": {
     "type": "string",
-    "description": "Greeting recipient",
-    "default": "AlonaBot"
+    "description": "GitHub repository containing the store index",
+    "default": "AlonaBot/plugin-store"
   }
 }

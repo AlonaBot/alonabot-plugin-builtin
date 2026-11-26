@@ -1,4 +1,4 @@
-// alonabot-plugin-builtin 命令运行示例插件。
+// alonabot-plugin-builtin 命令运行官方内置插件。
 package main
 
 import (
@@ -11,7 +11,7 @@ import (
 
 func main() {
 	if err := sdk.Run(plugin.New()); err != nil {
-		slog.Error("Example plugin stopped", "error", err)
+		slog.Error("Builtin plugin stopped", "error", err)
 		os.Exit(1)
 	}
 }

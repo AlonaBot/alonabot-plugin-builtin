@@ -210,4 +210,6 @@ func (s *Session) Call(ctx context.Context, req Request) (Response, error) {
 
 ## 本仓差异
 
-派生仓库在此列出实际依赖及已批准的规范例外，并注明原因与适用范围；尚无差异时保留本说明。规则正文同步自 Core，统一规则先在 Core 修改。
+- 已批准 `golang.org/x/image v0.48.0`，仅使用 font、font/opentype、font/sfnt、vector、math/fixed 等字体与绘图子包，纯 Go 绘制帮助菜单。
+- `assets/fonts/` 的 Noto Sans SC 字体遵循 SIL Open Font License，许可文件为 `assets/fonts/OFL.txt`。
+- 字体随 assets 原样打入安装包，运行时通过 `sdk.PackageDir(ctx)` 读取，不编进二进制；解析结果与失败按插件实例懒加载缓存。

@@ -1,5 +1,28 @@
 {
   "messages": {
-    "hello": "Hello {recipient}"
+    "help.title": "Help Menu",
+    "help.empty": "No commands are available.",
+    "help.index_hint": "Send /help <number or name> to view a plugin.",
+    "help.detail_hint": "Send /help {plugin} <command number or name> for full usage.",
+    "help.count": "{count} commands",
+    "help.line": "{names}",
+    "help.line.description": "{names} — {description}",
+    "help.aliases": "Aliases: {aliases}",
+    "help.not_found": "No match found for “{query}”.",
+    "help.ambiguous": "Multiple matches for “{query}”; choose a number or a more specific name:",
+    "help.none": "None",
+    "help.no_description": "No description provided.",
+    "help.usage_label": "Usage",
+    "help.aliases_label": "Aliases",
+    "help.description_label": "Description",
+    "help.plugin_label": "Plugin",
+    "help.field": "{label}: {value}",
+    "help.whoami": "User: {user}\nInstance: {instance}",
+    "help.whoami.no_actor": "This message has no user identity.",
+    "sid.identity": "Session: {session}\nInstance: {instance}\nUser: {user}\nChat type: {chat}",
+    "sid.unknown": "Unknown",
+    "sid.private": "Private",
+    "sid.group": "Group",
+    "sid.channel": "Channel"
   }
 }

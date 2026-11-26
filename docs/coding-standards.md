@@ -210,4 +210,6 @@ Commit only **integration tests** and **protocol-number checks**. Other tests st
 
 ## Repository differences
 
-Derived repositories should list actual dependencies and approved exceptions here, with their reasons and scope. Keep this placeholder until differences exist. Sync the rules above from Core; change shared rules in Core first.
+- `golang.org/x/image v0.48.0` is approved for pure Go help rendering, using only font, font/opentype, font/sfnt, vector, math/fixed and related font/drawing subpackages.
+- Noto Sans SC fonts in `assets/fonts/` use the SIL Open Font License; see `assets/fonts/OFL.txt`.
+- Font files are copied into the installation package as assets and read at runtime through `sdk.PackageDir(ctx)`. They are not embedded in the binary. Parsed fonts and load failures are lazily cached per plugin instance.

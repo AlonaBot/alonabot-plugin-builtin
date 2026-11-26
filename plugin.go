@@ -1,4 +1,4 @@
-// Package builtin 提供示例插件的公开构造入口。
+// Package builtin 提供官方内置插件的公开构造入口。
 package builtin
 
 import (

@@ -1,65 +1,47 @@
-# AlonaBot Go 插件模板
+# AlonaBot 官方 Builtin 插件
 
-[English](README.md) · [简体中文](README.zh-CN.md)
+[English](README.md)
 
-从这个模板创建 AlonaBot Go 插件，直接使用 Core 编码规范、集成测试、i18n、双语文档和 GitHub 自动化。本仓基于组织模板 `AlonaBot/alonabot-plugin-template`，计划发布为 `FlanChanXwO/alonabot-plugin-template`。官方插件与个人插件共用这套布局和贡献流程。
+发送 `/help` 查看 PicMenu 风格的三级图片帮助菜单；发送 `/whoami` 或 `/sid` 查询用户与会话身份。Builtin 完全替代旧 help 插件，并向 AI Agent 提供商店搜索、已装组件列表、安装组件和命令列表工具。开始新对话的 `/new` 由官方 Agent 提供。
 
-## 创建插件
+插件 ID 为 `alonabot-plugin-builtin-official`，模块为 `github.com/AlonaBot/alonabot-plugin-builtin`。图片由纯 Go 绘制，支持浅色与深色主题。
 
-1. 在 GitHub 选择 **Use this template → Create a new repository**，仓库名使用 `alonabot-plugin-<name>`。
-2. 克隆新仓库，在根目录运行改名脚本：
-
-```fish
-bash scripts/rename.sh AlonaBot builtin
-```
-
-这个例子用于创建 `AlonaBot/alonabot-plugin-builtin`。个人插件填写自己的账号和小写短名，例如 `my-plugin`，省略 `alonabot-plugin-` 前缀。Go 包名去掉连字符（`myplugin`）。脚本对尚未改名的模板执行一次，使用普通文件移动。
-
-开发前核对这些替换：
-
-| 位置 | 替换或检查内容 |
-| --- | --- |
-| [go.mod](go.mod)、Go import | `github.com/AlonaBot/alonabot-plugin-builtin` → 自己的 module 路径 |
-| [plugin.go](plugin.go)、[plugin_test.go](plugin_test.go)、[internal/builtin](internal/builtin) | `example` 包名与实现目录 → 自己的 Go 包名 |
-| [cmd/alonabot-plugin-builtin](cmd/alonabot-plugin-builtin) | 可执行入口目录 → `alonabot-plugin-<name>` |
-| [plugin.yaml](plugin.yaml) | ID、名称、作者、来源和描述；source 与新仓库一致 |
-| [LICENSE](LICENSE) | `AlonaBot` 与版权年份 |
-| 文档、公共技能与 GitHub 设置 | 改名后的路径、项目介绍、标签、按需配置的指派人与仓库 URL |
-
-脚本替换 module、import、包名、目录、插件 ID/name/source/author、版权人和对应公共文本。描述、版权年份与项目特有文档手动修改。手动替换步骤见[开发指南](docs/development.zh-CN.md)。
-
-## 运行示例
-
-使用 `go.mod` 声明的 Go 版本，本地由 asdf 管理。保留模板的 SDK 声明 `latest`，按 CI 相同方式拉取：
+## 安装
 
 ```fish
-go get github.com/AlonaBot/AlonaBot@latest
-go mod download github.com/AlonaBot/AlonaBot
-env GOTOOLCHAIN=(go env GOVERSION) go -C (go list -m -f '{{.Dir}}' github.com/AlonaBot/AlonaBot) install ./cmd/alonabot
-alonabot run . --data-dir ./data
+alonabot install --source AlonaBot/alonabot-plugin-builtin --yes
 ```
 
-将 Go bin 目录加入 PATH。在交互终端输入 `/hello`，默认回复 `Hello AlonaBot`。开发模式会在源码变化后重载。配置、语言和平台使用见[使用指南](docs/usage.zh-CN.md)。
+安装后由管理员在 WebUI 启用，并停用旧 help 插件，避免重复命令。当前开发版本使用 Core [PR #344](https://github.com/AlonaBot/AlonaBot/pull/344) 的未发布 SDK 接口；运行时需要包含这些接口的 Core。开发接入方式见[开发指南](docs/development.zh-CN.md)。
 
-Go 会将 `latest` 解析为具体版本并更新 `go.mod`/`go.sum`，派生仓库中应审阅这些变化。CI 与发布保留组织模板的 `go get ...@latest` 步骤。
+## 命令
 
-## 开发、测试与发布
+| 命令 | 别名 | 用途 |
+| --- | --- | --- |
+| `/help [plugin] [command]` | `/菜单` | 总览 → 插件详情 → 命令详情，支持序号、名称与模糊匹配 |
+| `/whoami` | — | 用户 ID 与实例 |
+| `/sid` | — | 会话 ID、实例、用户 ID 与本地化会话类型，方便配置白名单 |
 
-`plugin.go` 创建插件，`internal/builtin/register.go` 集中登记全部命令，`internal/builtin/handler/` 每个命令一个文件，业务逻辑归 `internal/builtin/`。`cmd/alonabot-plugin-builtin/main.go` 调用 `sdk.Run`。命令直接登记在根插件。
+列表由 Core 按当前会话准入与权限筛选。字体加载、图片上传或发送失败时，帮助菜单回复对应层级的文本。详情见[使用指南](docs/usage.zh-CN.md)。
 
-```fish
-go build ./...
-go vet ./...
-go test ./...
-alonabot check .
-alonabot test .
-alonabot pack . --target linux/amd64 --out bin
-```
+## Agent 工具
 
-[plugin_test.go](plugin_test.go) 使用真实 Core 与测试 Adapter 进行集成测试。发布时更新 `plugin.yaml` 与 `changelog/<版本>/en-US.md`、`zh-CN.md`，推送匹配的 `v*` 标签。发布工作流通过 `scripts/release.sh` 打包五平台归档并生成双语说明。
+完整工具名称为 `alonabot-plugin-builtin-official/<名称>`，默认策略为允许。
 
-- [使用](docs/usage.zh-CN.md) · [开发](docs/development.zh-CN.md) · [发布](docs/releasing.zh-CN.md)
-- [贡献指南](CONTRIBUTING.zh-CN.md) · [编码规范](docs/coding-standards.zh-CN.md)
-- [组件开发文档](https://alonabot.github.io/)
+| 名称 | 输入 | 副作用 | 权限与结果 |
+| --- | --- | --- | --- |
+| `store_search` | `q?`、`role?` | ReadOnly | 搜索商店；role 为 plugin、adapter、agent 或 webui |
+| `packages_list` | `{}` | ReadOnly | Core 管理员；返回组件身份与启用状态 |
+| `packages_install` | `source: "owner/repo"` | Write | Core 管理员；返回安装结果和 affected，安装后可能需要管理员在 WebUI 启用 |
+| `commands_list` | `{}` | ReadOnly | 返回当前会话可用命令的插件、路径、参数、别名和说明 |
 
-[MIT License](LICENSE)
+## 配置
+
+| 字段 | 类型 | 默认值 | 用途 |
+| --- | --- | --- | --- |
+| `dark` | bool | `false` | 深色帮助菜单 |
+| `store_source` | string | `AlonaBot/plugin-store` | 商店索引所在的 GitHub 仓库 |
+
+字体随 `assets/fonts/` 分发，遵循 [SIL Open Font License](assets/fonts/OFL.txt)，运行时按包目录读取。
+
+开发与验证见[开发指南](docs/development.zh-CN.md)，规范见[编码规范](docs/coding-standards.zh-CN.md)，发布见[发布指南](docs/releasing.zh-CN.md)。

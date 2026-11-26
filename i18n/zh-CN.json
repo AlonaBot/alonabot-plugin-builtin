@@ -1,8 +1,33 @@
 {
   "messages": {
-    "hello": "你好，{recipient}"
+    "help.title": "帮助菜单",
+    "help.empty": "当前没有可用命令。",
+    "help.index_hint": "发送 /help <序号或名称> 查看插件详情。",
+    "help.detail_hint": "发送 /help {plugin} <命令序号或名称> 查看完整用法。",
+    "help.count": "{count} 个命令",
+    "help.line": "{names}",
+    "help.line.description": "{names} — {description}",
+    "help.aliases": "别名：{aliases}",
+    "help.not_found": "未找到与“{query}”匹配的内容。",
+    "help.ambiguous": "“{query}”匹配到多个结果，请选择序号或使用更完整的名称：",
+    "help.none": "无",
+    "help.no_description": "暂无说明。",
+    "help.usage_label": "用法",
+    "help.aliases_label": "别名",
+    "help.description_label": "说明",
+    "help.plugin_label": "所属插件",
+    "help.field": "{label}：{value}",
+    "help.whoami": "用户：{user}\n实例：{instance}",
+    "help.whoami.no_actor": "这条消息没有用户身份。",
+    "sid.identity": "会话：{session}\n实例：{instance}\n用户：{user}\n会话类型：{chat}",
+    "sid.unknown": "未知",
+    "sid.private": "私聊",
+    "sid.group": "群聊",
+    "sid.channel": "频道"
   },
   "commands": {
-    "hello": { "description": "发送问候" }
+    "help": { "description": "查看图片帮助菜单" },
+    "whoami": { "description": "显示你的用户 ID 与实例名" },
+    "sid": { "description": "显示会话、实例、用户与会话类型" }
   }
 }

@@ -1,65 +1,47 @@
-# AlonaBot Go plugin template
+# AlonaBot Official Builtin Plugin
 
-[English](README.md) · [简体中文](README.zh-CN.md)
+[简体中文](README.zh-CN.md)
 
-Create an AlonaBot Go plugin with the Core coding standards, integration testing, i18n, bilingual documentation and GitHub automation already in place. This repository is intended to be published as `FlanChanXwO/alonabot-plugin-template`, based on the organization template `AlonaBot/alonabot-plugin-template`. Official and personal plugins can use the same layout and contribution workflow.
+Send `/help` to open a PicMenu-style, three-level image menu. Use `/whoami` or `/sid` to inspect user and conversation identity. Builtin fully replaces the old help plugin and gives AI Agents tools for store search, installed components, component installation and available commands. The official Agent provides `/new` to start a new conversation.
 
-## Create your plugin
+The plugin ID is `alonabot-plugin-builtin-official`; its Go module is `github.com/AlonaBot/alonabot-plugin-builtin`. Images are drawn in pure Go with light and dark themes.
 
-1. Choose **Use this template → Create a new repository** on GitHub. Name the repository `alonabot-plugin-<name>`.
-2. Clone your new repository and run the rename script from its root:
-
-```fish
-bash scripts/rename.sh AlonaBot builtin
-```
-
-This example prepares `AlonaBot/alonabot-plugin-builtin`. For a personal plugin, supply your account and a lowercase short name such as `my-plugin`; omit the `alonabot-plugin-` prefix. Hyphens are removed from the Go package name (`myplugin`). The script runs once on an unrenamed template and uses ordinary file moves.
-
-Review these replacements before developing:
-
-| Location | Replace or review |
-| --- | --- |
-| [go.mod](go.mod), Go imports | `github.com/AlonaBot/alonabot-plugin-builtin` → your module path |
-| [plugin.go](plugin.go), [plugin_test.go](plugin_test.go), [internal/builtin](internal/builtin) | `example` package and implementation directory → your Go package name |
-| [cmd/alonabot-plugin-builtin](cmd/alonabot-plugin-builtin) | executable directory → `alonabot-plugin-<name>` |
-| [plugin.yaml](plugin.yaml) | ID, name, author, source and description; source must match the new repository |
-| [LICENSE](LICENSE) | `AlonaBot` and copyright year |
-| Documentation, public skills and GitHub settings | renamed paths, project introduction, labels, optional assignees and repository URLs |
-
-The script replaces the module path, imports, package names, directories, plugin ID/name/source/author, copyright holder and matching public text. Edit the description, copyright year and project-specific documentation yourself. Instructions for manual replacement are in [development](docs/development.md).
-
-## Run the example
-
-Use the Go version declared in `go.mod` (managed with asdf locally). Keep the template's SDK declaration `latest` and obtain it with the same command used in CI:
+## Install
 
 ```fish
-go get github.com/AlonaBot/AlonaBot@latest
-go mod download github.com/AlonaBot/AlonaBot
-env GOTOOLCHAIN=(go env GOVERSION) go -C (go list -m -f '{{.Dir}}' github.com/AlonaBot/AlonaBot) install ./cmd/alonabot
-alonabot run . --data-dir ./data
+alonabot install --source AlonaBot/alonabot-plugin-builtin --yes
 ```
 
-Add the Go bin directory to PATH. Type `/hello` in the interactive terminal: the default reply is `Hello AlonaBot`. Development mode reloads source changes. Configuration, supported locales and platform usage are described in [usage](docs/usage.md).
+An administrator enables the plugin in WebUI and disables the old help plugin to avoid duplicate commands. This development version uses unreleased SDK APIs from Core [PR #344](https://github.com/AlonaBot/AlonaBot/pull/344), and requires a Core containing those APIs. See [development](docs/development.md) for the local SDK setup.
 
-Go resolves `latest` to a concrete version and updates `go.mod`/`go.sum`. Review those changes in your derived repository. CI and releases retain the organization template's `go get ...@latest` step.
+## Commands
 
-## Develop, test and release
+| Command | Alias | Purpose |
+| --- | --- | --- |
+| `/help [plugin] [command]` | `/菜单` | Overview → plugin details → command details; accepts numbers, names and partial matches |
+| `/whoami` | — | Show user ID and instance |
+| `/sid` | — | Show session ID, instance, user ID and localized chat type for allowlist configuration |
 
-`plugin.go` constructs the plugin, `internal/builtin/register.go` registers all commands, `internal/builtin/handler/` holds one file per command, and business logic belongs to `internal/builtin/`. `cmd/alonabot-plugin-builtin/main.go` calls `sdk.Run`. Commands use the root plugin directly.
+Core filters the list by conversation admission and permissions. Font loading, image upload or image delivery failures produce a text menu for the selected level. See [usage](docs/usage.md).
 
-```fish
-go build ./...
-go vet ./...
-go test ./...
-alonabot check .
-alonabot test .
-alonabot pack . --target linux/amd64 --out bin
-```
+## Agent tools
 
-[plugin_test.go](plugin_test.go) is an integration test using real Core and a test Adapter. For releases, update `plugin.yaml` and both `changelog/<version>/en-US.md` and `zh-CN.md`, then push a matching `v*` tag. The release workflow packages five platforms using `scripts/release.sh` and publishes bilingual notes.
+Full tool names are `alonabot-plugin-builtin-official/<name>`, with an allow policy by default.
 
-- [Usage](docs/usage.md) · [Development](docs/development.md) · [Releasing](docs/releasing.md)
-- [Contributing](CONTRIBUTING.md) · [Coding standards](docs/coding-standards.md)
-- [Component development documentation](https://alonabot.github.io/)
+| Name | Input | Effect | Permissions and result |
+| --- | --- | --- | --- |
+| `store_search` | Optional `q`, `role` | ReadOnly | Search the store; role is plugin, adapter, agent or webui |
+| `packages_list` | `{}` | ReadOnly | Core administrator; component identities and enabled status |
+| `packages_install` | `source: "owner/repo"` | Write | Core administrator; installation result and affected components; an administrator may need to enable the component in WebUI |
+| `commands_list` | `{}` | ReadOnly | Available plugin identities, command paths, parameters, aliases and descriptions in this conversation |
 
-[MIT License](LICENSE)
+## Configuration
+
+| Field | Type | Default | Purpose |
+| --- | --- | --- | --- |
+| `dark` | bool | `false` | Use the dark help menu theme |
+| `store_source` | string | `AlonaBot/plugin-store` | GitHub repository containing the store index |
+
+Fonts ship in `assets/fonts/` under the [SIL Open Font License](assets/fonts/OFL.txt) and are read from the package directory at runtime.
+
+See [development](docs/development.md), [coding standards](docs/coding-standards.md) and [releasing](docs/releasing.md).

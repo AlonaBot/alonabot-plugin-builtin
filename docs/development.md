@@ -1,45 +1,50 @@
-# Develop your plugin
+# Develop the official Builtin plugin
 
 [简体中文](development.zh-CN.md)
 
-Start with the [README setup](../README.md) to rename the project and install a CLI matching the selected SDK. Run commands below from the repository root. Go follows `go.mod`, with asdf for local runtime management. The template declares the SDK as `latest`; `go get github.com/AlonaBot/AlonaBot@latest` resolves it, as in CI. Review the resulting module files.
+Run `go build ./...` from the repository root to compile the pure Go image menu, identity commands and Agent tools. Use the Go version declared in [go.mod](../go.mod), managed locally by asdf.
 
-## Rename before implementing
+## Local SDK prerequisite
+
+`go.mod` retains `github.com/AlonaBot/AlonaBot v0.3.3`. The implementation currently uses `sdk.PackageDir`, `sdk/packages`, command plugin metadata and inherited service conversation context from Core [PR #344](https://github.com/AlonaBot/AlonaBot/pull/344). These APIs have not shipped in that SDK version. An ignored `go.work` references both this repository and the local Core branch:
 
 ```fish
-bash scripts/rename.sh AlonaBot builtin
+go work init . /path/to/alonabot/.worktrees/builtin-core
 ```
 
-Use a GitHub account and a lowercase short name, such as `builtin` or `my-plugin`. The resulting repository is `alonabot-plugin-<name>`; Go package names remove hyphens. The script validates its external arguments and requires an unrenamed template. It replaces `AlonaBot`, `alonabot-plugin-builtin`, package declarations and implementation paths, then moves `cmd/alonabot-plugin-builtin/` and `internal/builtin/` with ordinary `mv`.
+Use `go work use` to add directories to an existing workspace. The maintainer's supplied environment already has this workspace configured. The approved `golang.org/x/image v0.48.0` dependency provides drawing support without a browser or extra runtime.
 
-For manual replacement, update all of these together:
-
-1. The module path in `go.mod` and every Go import under `github.com/AlonaBot/alonabot-plugin-builtin`.
-2. The root and test package declarations, the `internal/builtin/` package and directory, and `cmd/alonabot-plugin-builtin/`.
-3. `plugin.yaml`: `id`, `name`, `author`, `source` and `description`. Keep the `alonabot-plugin-` ID prefix; `source` must be `github.com/<owner>/alonabot-plugin-<name>`.
-4. The `AlonaBot` copyright holder and year in `LICENSE`; update public documentation, skill paths and any repository-specific GitHub metadata.
-5. Review `.github/labeler.yml` and create `bug`, `enhancement`, `area: docs`, `area: github-actions` and `area: plugin` labels in the derived repository. Adjust issue contact links and optional assignees for its maintainers.
-
-The script handles identity and matching text; edit descriptions, the year, usage and project-specific instructions yourself. See the [README checklist](../README.md).
-
-## Source layout
+## Source ownership
 
 | Entry | Responsibility |
 | --- | --- |
-| `plugin.go` | Export `New() *sdk.Plugin`; construct the root plugin and call `Register` |
-| `internal/builtin/register.go` | Register every command on that root plugin |
-| `internal/builtin/handler/<command>.go` | One handler per command; translate replies with `c.T` |
-| `internal/builtin/` | Business logic, added when the command needs it |
-| `cmd/alonabot-plugin-builtin/main.go` | Call `sdk.Run`, log errors in English and exit on failure |
-| `plugin_test.go` | Integration tests through `New`, real Core and a test Adapter |
-| `i18n/`, `plugin_config_schema.json`, `plugin.yaml` | Translations, configuration and plugin identity |
+| `plugin.go` | `New()` creates the root plugin and delegates business registration to `internal/builtin.Register(p)` |
+| `internal/builtin/register.go` | Register three commands and four JSON services, tools and permissions |
+| `internal/builtin/handler/` | One file per command; arguments and `c.T` replies |
+| `internal/menu/` | Grouping, matching, parameter hints and lazy font caching |
+| `internal/render/` | 1080 px PNGs, vector rounded cards and OpenType text layout |
+| `internal/tools/` | Store mirror race, package operations and available-command queries |
+| `assets/fonts/` | OFL fonts and license, copied into the installation package |
+| `cmd/alonabot-plugin-builtin/main.go` | `sdk.Run` process entry |
+| `plugin_test.go` | Real Core and test Adapter through public `New()` and plugintest |
 
-Keep registration in `Register`, command input/output in handlers, and shared business logic in the implementation package. Pass needed business functions or state to handlers to keep package imports acyclic. The greeting example only needs configuration and translation. SDK tooling embeds resources with a build overlay; maintain these source resources directly.
+All business routes use one root plugin. Parsed fonts are cached per plugin instance; each render owns its `font.Face` values. Failed loads are cached as well. A missing package directory or font logs one English warning and uses text menus. `render.ParseFonts` accepts caller-provided font bytes for direct tests. Runtime loading resolves `assets/fonts/` through `sdk.PackageDir(ctx)`; font files ship as resources.
+
+## SDK contracts
+
+Help uses `command.List(c)` with Core admission, permission filtering and localization. Upload PNGs with `media.Upload(c, bytes.NewReader(png), "image/png")`, then send `message.Image(ref.Source())`. Rendering, upload or delivery errors log the cause and produce the same menu level as text.
+
+The SDK currently exposes inbound HTTP routes. Store requests use `http.DefaultClient` and the parent's context, race GitHub Raw against jsDelivr, and cancel the other request when the first valid index arrives. If both fail, all errors are retained. Requests inherit the call deadline.
+
+Each tool registers with `service.JSON[In, Out]("/<name>")` and `service.Serve`, with public access, a default allow policy and ReadOnly/Write effects. Component listing and installation additionally require `sdk.Admin`; Core checks the original message actor. Installation preserves partial results, affected components and the full error.
+
+JSON inputs and outputs must be package-level named, non-generic types. Schema IDs include the full package path and type name. Requests and responses check IDs and versions; structurally identical types still have separate identities. Agents call tools with `tool.Invoke`, letting Core forward arguments using the registered schema. Builtin business code needs no Agent contract import. The official Agent owns new-conversation commands.
 
 ## Verify changes
 
 ```fish
-gofmt -w plugin.go plugin_test.go internal/builtin/register.go internal/builtin/handler/hello.go cmd/alonabot-plugin-builtin/main.go
+gofmt -w plugin.go plugin_test.go internal cmd
+gofmt -l .
 go build ./...
 go vet ./...
 go test ./...
@@ -48,11 +53,17 @@ alonabot check .
 alonabot test .
 ```
 
-After renaming, use the new paths for formatting. `plugin_test.go` covers default and configured `/hello` replies through real Core with a test Adapter. Commit integration tests only. Put temporary unit/boundary tests in ignored `*_local_test.go` and one-off scripts in ignored `tmp/test/`. Record actual commands, platform, results, added committed test lines and unrun checks in the PR.
+Integration tests cover `/whoami`, private/group `/sid`, all three menu levels, numeric/name matching, ambiguous and missing matches, text fallback after image rejection, and `commands_list` through the real tool invocation chain. The test Adapter replaces the external platform while Core and SDK remain real. If sandbox permissions prohibit loopback listeners, record the exact error and rerun on a local machine with port access.
 
-CI selects checks from changed paths, runs vet and integration tests with race detection, and builds pure Go for linux/amd64, linux/arm64, windows/amd64, darwin/amd64 and darwin/arm64. Resource changes trigger `alonabot check .` and offline loading with `alonabot test .`. Cross-compilation verifies builds; platform behavior needs its own evidence.
+The ignored `internal/render/render_local_test.go` loads real fonts and generates six PNGs: light/dark overview, plugin and command menus. It checks 1080 px width, character wrapping and ellipsis. Run it alone with:
 
-For manual cross-compilation:
+```fish
+go test ./internal/render -run TestRenderMenusLocal -v
+```
+
+Inspect `tmp/render/{light,dark}-{index,detail,command}.png` for text, borders and layout. Local store tests use an in-memory HTTP Transport to verify mirror cancellation, filtering, invalid input and dual failures; run `go test ./internal/tools`. Local tests use `*_local_test.go`; only integration tests through real entry points are intended for submission.
+
+CI builds pure Go for five platforms. To run these builds manually:
 
 ```fish
 for target in linux/amd64 linux/arm64 windows/amd64 darwin/amd64 darwin/arm64
@@ -61,4 +72,4 @@ for target in linux/amd64 linux/arm64 windows/amd64 darwin/amd64 darwin/arm64
 end
 ```
 
-For documentation and GitHub metadata, inspect relative links, YAML, changed scripts and `git diff --check`. Reuse valid results until a relevant change or failure warrants another run. Follow the [coding standards](coding-standards.md), [contribution workflow](../CONTRIBUTING.md) and [component development documentation](https://alonabot.github.io/). Repository-specific dependencies and approved exceptions belong in the standards' final section.
+Keep bilingual documentation and catalogs synchronized. See the [repository differences](coding-standards.md#repository-differences) for drawing/font exceptions and the [contribution guide](../CONTRIBUTING.md).
