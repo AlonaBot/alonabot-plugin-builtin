@@ -2,7 +2,10 @@ module github.com/AlonaBot/alonabot-plugin-builtin
 
 go 1.27.3
 
-require github.com/AlonaBot/AlonaBot v0.3.3
+require (
+	github.com/AlonaBot/AlonaBot v0.4.0
+	golang.org/x/image v0.48.0
+)
 
 require (
 	github.com/dustin/go-humanize v1.1.0 // indirect
@@ -16,7 +19,6 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/yuin/goldmark v1.7.16 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/image v0.48.0
 	golang.org/x/sys v0.50.0 // indirect
 	golang.org/x/text v0.44.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
