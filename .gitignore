@@ -1,0 +1,23 @@
+# alonabot run 的数据目录与本地构建产物
+data/
+bin/
+build/
+dist/
+.alonabot/
+
+# 编辑器与系统文件
+.idea/
+.vscode/
+.DS_Store
+
+# 本地验证、工作区与凭据
+*_local_test.go
+*.local.test.ts
+*.local.test.tsx
+tmp/
+.repo/
+.worktrees/
+go.work
+go.work.sum
+.env
+*.env

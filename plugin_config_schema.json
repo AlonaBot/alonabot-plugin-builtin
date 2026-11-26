@@ -1,0 +1,7 @@
+{
+  "recipient": {
+    "type": "string",
+    "description": "Greeting recipient",
+    "default": "AlonaBot"
+  }
+}
